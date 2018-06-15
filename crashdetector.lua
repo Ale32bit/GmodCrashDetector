@@ -39,38 +39,14 @@ concommand.Add("cd_debug", function()
     log("Debug:",config.debug)
 end)
 
+local Frame;
 
-if SERVER then
-    log("Running as server")
-
-    AddCSLuaFile("crashdetector.lua");
-
-
-    util.AddNetworkString( "CrashDetectPing" )
-
-    local receive = function( len, ply )
-        local ping = net.ReadString()
-        if ping == "ping" then
-            if(config.debug) then
-                log(ply,ping)
-            end
-            net.Start("CrashDetectPing")
-            net.WriteString("ping")
-            net.Send( ply )
-        end
-    end
-
-    net.Receive( "CrashDetectPing", receive )
-elseif CLIENT then
-    log("Running as client")
-
-    chat.AddText("Running Crash Detector by Ale32bit! https://ale32bit.me");
-
-    -- frame
+local function loadFrame()
+	-- frame
 
     local sw,sh = 500,250
-
-    local Frame = vgui.Create( "DFrame" )
+	
+	Frame = vgui.Create( "DFrame" )
     Frame:SetPos( math.floor((ScrW()/2)-(sw/2)), math.floor((ScrH()/2)-(sh/2)) )
     Frame:SetSize( sw, sh )
     Frame:SetTitle( "The server stopped responding" )
@@ -124,6 +100,35 @@ elseif CLIENT then
     Close.DoClick = function()
         Frame:SetVisible(false)
     end
+end
+
+
+if SERVER then
+    log("Running as server")
+
+    AddCSLuaFile("crashdetector.lua");
+
+
+    util.AddNetworkString( "CrashDetectPing" )
+
+    local receive = function( len, ply )
+        local ping = net.ReadString()
+        if ping == "ping" then
+            if(config.debug) then
+                log(ply,ping)
+            end
+            net.Start("CrashDetectPing")
+            net.WriteString("ping")
+            net.Send( ply )
+        end
+    end
+
+    net.Receive( "CrashDetectPing", receive )
+elseif CLIENT then
+    log("Running as client")
+
+    chat.AddText("Running Crash Detector by Ale32bit! https://ale32bit.me");
+
 
     local function triggerLag()
         log("Lag detected")
@@ -145,7 +150,10 @@ elseif CLIENT then
             end
             if not started then
                 started = true
+				loadFrame();
             end
+			
+			
 
             lastPing = CurTime()
             Frame:SetVisible(false)
